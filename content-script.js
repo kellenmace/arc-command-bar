@@ -1,4 +1,5 @@
 const arc_command_bar_id = "arc-command-bar-root";
+const search_input_id = "arc-command-bar-search-input";
 
 const site_search_providers = [
   {
@@ -50,6 +51,7 @@ let command_bar_element = null;
 let input_element = null;
 let results_element = null;
 let site_search_badge_element = null;
+let is_pointer_down_inside_command_bar = false;
 let state = {
   is_open: false,
   query: "",
@@ -102,6 +104,10 @@ function close_command_bar() {
     return;
   }
 
+  close_command_bar_immediately();
+}
+
+function close_command_bar_immediately() {
   state = {
     ...state,
     is_open: false,
@@ -111,8 +117,17 @@ function close_command_bar() {
     site_search_provider: null,
   };
 
-  host_element.hidden = true;
   remove_page_key_event_listeners();
+
+  if (shadow_root?.activeElement) {
+    shadow_root.activeElement.blur();
+  }
+
+  if (document.activeElement === host_element) {
+    host_element.blur();
+  }
+
+  host_element.hidden = true;
   input_element.value = "";
   input_element.placeholder = "Search or enter URL...";
 }
@@ -144,6 +159,7 @@ function ensure_command_bar() {
   command_bar_element.className = "arc-command-bar";
   command_bar_element.setAttribute("role", "dialog");
   command_bar_element.setAttribute("aria-modal", "true");
+  command_bar_element.addEventListener("pointerdown", handle_command_bar_pointer_down, true);
   command_bar_element.addEventListener(
     "mousedown",
     function stop_panel_mouse_down(event) {
@@ -176,6 +192,8 @@ function create_search_area() {
   site_search_badge_element.hidden = true;
 
   input_element = document.createElement("input");
+  input_element.id = search_input_id;
+  input_element.name = "arc-command-bar-search";
   input_element.className = "arc-command-bar-input";
   input_element.type = "text";
   input_element.autocomplete = "off";
@@ -184,10 +202,17 @@ function create_search_area() {
   input_element.placeholder = "Search or enter URL...";
   input_element.addEventListener("input", handle_input);
   input_element.addEventListener("keydown", handle_input_key_down, true);
+  input_element.addEventListener("blur", handle_input_blur);
+
+  const label_element = document.createElement("label");
+  label_element.className = "arc-command-bar-sr-only";
+  label_element.htmlFor = search_input_id;
+  label_element.textContent = "Search or enter URL";
 
   search_area_element.append(
     search_icon_element,
     site_search_badge_element,
+    label_element,
     input_element
   );
 
@@ -199,9 +224,44 @@ function handle_input_key_down(event) {
     return;
   }
 
-  if (event.key === "Escape") {
+  if (is_escape_key(event)) {
+    if (typeof event.stopImmediatePropagation === "function") {
+      event.stopImmediatePropagation();
+    }
+
     close_command_bar_from_key_event(event);
   }
+}
+
+function handle_input_blur() {
+  requestAnimationFrame(function close_after_escape_blur() {
+    if (!state.is_open || is_pointer_down_inside_command_bar || is_focus_inside_command_bar()) {
+      return;
+    }
+
+    close_command_bar_immediately();
+  });
+}
+
+function handle_command_bar_pointer_down() {
+  is_pointer_down_inside_command_bar = true;
+
+  window.addEventListener("pointerup", clear_command_bar_pointer_down, {
+    once: true,
+    capture: true,
+  });
+}
+
+function clear_command_bar_pointer_down() {
+  setTimeout(function clear_pointer_flag() {
+    is_pointer_down_inside_command_bar = false;
+  }, 0);
+}
+
+function is_focus_inside_command_bar() {
+  const active_element = shadow_root?.activeElement;
+
+  return Boolean(active_element && active_element !== shadow_root);
 }
 
 async function load_recent_tabs() {
@@ -297,7 +357,7 @@ function handle_command_bar_key_down(event) {
 
   event.stopPropagation();
 
-  if (event.key === "Escape") {
+  if (is_escape_key(event)) {
     close_command_bar_from_key_event(event);
     return;
   }
@@ -362,7 +422,7 @@ function handle_page_key_event(event) {
     return;
   }
 
-  if (event.key === "Escape") {
+  if (is_escape_key(event)) {
     close_command_bar_from_key_event(event);
     return;
   }
@@ -406,12 +466,17 @@ function focus_input_without_scrolling() {
 function close_command_bar_from_key_event(event) {
   event.preventDefault();
   event.stopPropagation();
+  event.cancelBubble = true;
 
   if (typeof event.stopImmediatePropagation === "function") {
     event.stopImmediatePropagation();
   }
 
-  close_command_bar();
+  close_command_bar_immediately();
+}
+
+function is_escape_key(event) {
+  return event.key === "Escape" || event.key === "Esc" || event.code === "Escape" || event.keyCode === 27 || event.which === 27;
 }
 
 function should_exit_site_search() {
@@ -673,12 +738,21 @@ function create_result_action(item) {
 
   const arrow_element = document.createElement("span");
   arrow_element.className = "arc-command-bar-action-arrow";
-  arrow_element.textContent = "→";
+  arrow_element.innerHTML = get_arrow_right_svg();
   arrow_element.setAttribute("aria-hidden", "true");
 
   action_element.append(label_element, arrow_element);
 
   return action_element;
+}
+
+function get_arrow_right_svg() {
+  return [
+    '<svg viewBox="0 0 24 24" focusable="false">',
+    '<path d="M5 12h12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+    '<path d="m13 8 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
+    "</svg>",
+  ].join("");
 }
 
 function get_result_title(item) {

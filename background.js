@@ -366,6 +366,10 @@ function remove_duplicate_items(items) {
 function looks_like_url(input) {
   const trimmed_input = input.trim();
 
+  if (/^chrome:\/\//i.test(trimmed_input)) {
+    return true;
+  }
+
   if (/^https?:\/\//i.test(trimmed_input)) {
     return true;
   }
@@ -378,6 +382,10 @@ function looks_like_url(input) {
 }
 
 function normalize_input_url(input) {
+  if (/^chrome:\/\//i.test(input)) {
+    return input;
+  }
+
   if (/^https?:\/\//i.test(input)) {
     return input;
   }
