@@ -27,8 +27,24 @@ To use site search, type `youtube`, `amazon`, `wikipedia`, `x`, `twitter`, or `s
 
 Press Escape or click outside the command bar to close it.
 
-FAQ
+On pages where Chrome doesn't allow extensions to show content, such as the New Tab page, `chrome://` pages, and the Chrome Web Store, the command bar opens as a popup from the toolbar button instead.
+
+## Privacy
+
+Arc Command Bar doesn't collect or transmit any data. Tab, history, and favicon data stays on your device and is only used to show results. The command bar runs in an isolated extension frame, so websites can't read its contents or what you type into it. See [PRIVACY.md](PRIVACY.md) for the full privacy policy.
+
+## Packaging For The Chrome Web Store
+
+Run this command to build the zip file to upload to the Chrome Web Store:
+
+```bash
+./scripts/package-extension.sh
+```
+
+The zip is written to `dist/` and contains only the files the extension needs at runtime. [STORE-LISTING.md](STORE-LISTING.md) has the permission justifications and other text for the store submission form. The source SVGs for the extension icons are in `icons/source/`.
+
+## FAQ
 
 > How can I customize the keyboard shortcut?
 
-This extension provides an cmd/ctrl + shift + k keyboard shortcut you can use to show/hide the command bar. To customize the keyboard shortcut, go to the Chrome "Keyboard shortcuts" page by navigating to `chrome://extensions/shortcuts` in a browser tab. Find this extension on the list and click the edit button to set your own custom keyboard shortcut. Setting it to cmd/ctrl + t results in this extension's command bar replacing Chrome's default new tab page.
+This extension provides a cmd/ctrl + shift + k keyboard shortcut you can use to show/hide the command bar. To customize the keyboard shortcut, go to the Chrome "Keyboard shortcuts" page by navigating to `chrome://extensions/shortcuts` in a browser tab. Find this extension on the list and click the edit button to set your own custom keyboard shortcut. Setting it to cmd/ctrl + t results in this extension's command bar replacing Chrome's default new tab page.

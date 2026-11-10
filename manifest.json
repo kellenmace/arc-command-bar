@@ -3,7 +3,9 @@
   "name": "Arc Command Bar",
   "version": "0.1.0",
   "description": "A Chrome command bar for switching tabs, opening URLs, searching history, and searching sites.",
-  "permissions": ["activeTab", "history", "search", "tabs", "topSites"],
+  "homepage_url": "https://github.com/kellenmace/arc-command-bar",
+  "minimum_chrome_version": "127",
+  "permissions": ["activeTab", "favicon", "history", "scripting", "search", "tabs", "topSites"],
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
@@ -14,7 +16,11 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Toggle Arc Command Bar"
+    "default_title": "Toggle Arc Command Bar",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
   },
   "commands": {
     "_execute_action": {
@@ -24,16 +30,9 @@
       }
     }
   },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content-script.js"],
-      "run_at": "document_idle"
-    }
-  ],
   "web_accessible_resources": [
     {
-      "resources": ["command-bar.css"],
+      "resources": ["command-bar.html"],
       "matches": ["<all_urls>"]
     }
   ]

@@ -1,19 +1,49 @@
-:host {
-  all: initial;
+/* The iframe element in content-script.js also uses `color-scheme: dark`. If the iframe element
+   and this page disagree, Chrome paints an opaque backdrop over the whole web page. Declaring
+   `normal` isn't enough: on pages with a color-scheme meta tag (like Google Search), `normal` on
+   the iframe element resolves to that page's scheme, so both sides must name the same scheme. */
+html {
+  background: transparent;
   color-scheme: dark;
-  font-family: Arial, Helvetica, sans-serif;
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
 }
 
-:host([hidden]) {
+body {
+  background: transparent;
+  margin: 0;
+}
+
+body[hidden] {
   display: none;
 }
 
 * {
   box-sizing: border-box;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Toolbar popup shown on pages that don't allow extensions to inject content. */
+html.is-popup,
+html.is-popup body {
+  background: rgb(19, 21, 22);
+}
+
+html.is-popup body {
+  width: 765px;
+}
+
+html.is-popup .arc-command-bar-overlay {
+  min-height: 0;
+  padding: 0;
+  position: static;
+}
+
+/* Chrome draws extension popups as an opaque box with square corners that a page can't change,
+   so the panel fills that box with square corners too instead of mixing two corner styles. */
+html.is-popup .arc-command-bar {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  max-height: none;
 }
 
 .arc-command-bar-sr-only {
@@ -197,10 +227,6 @@
   display: block;
   height: 18px;
   width: 18px;
-}
-
-.arc-command-bar-symbol-icon-url {
-  font-size: 21px;
 }
 
 .arc-command-bar-symbol-icon-site {
