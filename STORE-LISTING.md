@@ -33,7 +33,6 @@ Certify all three Limited Use statements: the data is not sold, not used for unr
 
 https://github.com/kellenmace/arc-command-bar/blob/main/PRIVACY.md
 
-## Store assets still needed
+## Store assets
 
-- At least one screenshot, 1280×800 or 640×400.
-- Optional: small promo tile, 440×280.
+- Screenshot: `screenshot.png` (1280×800). Upload it in the Developer Dashboard.
