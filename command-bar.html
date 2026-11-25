@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Arc Command Bar</title>
+    <link rel="stylesheet" href="command-bar.css">
+    <script src="command-bar.js" defer></script>
+  </head>
+  <body>
+    <div class="arc-command-bar-overlay" id="arc-command-bar-overlay">
+      <section class="arc-command-bar" id="arc-command-bar" role="dialog" aria-modal="true" aria-label="Arc Command Bar">
+        <div class="arc-command-bar-search-area">
+          <span class="arc-command-bar-search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+              <path d="M15.4 15.4 21 21" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="arc-command-bar-site-badge" id="arc-command-bar-site-badge" hidden></span>
+          <label class="arc-command-bar-sr-only" for="arc-command-bar-search-input">Search or enter URL</label>
+          <input
+            class="arc-command-bar-input"
+            id="arc-command-bar-search-input"
+            type="text"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-controls="arc-command-bar-results"
+            aria-expanded="true"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="Search or enter URL..."
+          >
+        </div>
+        <div class="arc-command-bar-results" id="arc-command-bar-results" role="listbox" aria-label="Results"></div>
+      </section>
+    </div>
+
+    <template id="arc-command-bar-search-icon-template">
+      <span class="arc-command-bar-symbol-icon arc-command-bar-symbol-icon-search" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/>
+          <path d="M15.4 15.4 21 21" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </span>
+    </template>
+
+    <template id="arc-command-bar-globe-icon-template">
+      <span class="arc-command-bar-globe-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2"/>
+          <path d="M3 12h18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M12 3c2.4 2.5 3.6 5.5 3.6 9s-1.2 6.5-3.6 9c-2.4-2.5-3.6-5.5-3.6-9S9.6 5.5 12 3Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+        </svg>
+      </span>
+    </template>
+
+    <template id="arc-command-bar-arrow-icon-template">
+      <span class="arc-command-bar-action-arrow" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M5 12h12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="m13 8 4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+    </template>
+  </body>
+</html>

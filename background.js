@@ -18,7 +18,7 @@ const common_websites = [
 ];
 
 chrome.action.onClicked.addListener(async function handle_action_clicked(tab) {
-  await send_toggle_message(tab.id);
+  await toggle_command_bar(tab);
 });
 
 chrome.runtime.onMessage.addListener(function handle_runtime_message(message, sender, send_response) {
@@ -34,23 +34,98 @@ chrome.runtime.onMessage.addListener(function handle_runtime_message(message, se
   return true;
 });
 
-async function send_toggle_message(tab_id) {
-  if (!tab_id) {
+async function toggle_command_bar(tab) {
+  if (await close_open_popup()) {
     return;
   }
 
+  if (!tab?.id) {
+    return;
+  }
+
+  if (await send_toggle_message(tab.id)) {
+    return;
+  }
+
+  if (await inject_command_bar(tab.id)) {
+    return;
+  }
+
+  await open_command_bar_popup();
+}
+
+async function close_open_popup() {
+  const popup_contexts = await chrome.runtime.getContexts({
+    contextTypes: ["POPUP"]
+  });
+
+  if (!popup_contexts.length) {
+    return false;
+  }
+
   try {
-    await chrome.tabs.sendMessage(tab_id, {
-      type: "arc_command_bar_toggle"
+    await chrome.runtime.sendMessage({
+      type: "arc_command_bar_close_popup"
     });
   } catch (error) {
-    // Restricted pages do not accept content scripts or extension messages.
+    // The popup closes without replying, which rejects the message promise.
+  }
+
+  return true;
+}
+
+async function send_toggle_message(tab_id) {
+  try {
+    const response = await chrome.tabs.sendMessage(tab_id, {
+      type: "arc_command_bar_toggle"
+    }, {
+      frameId: 0
+    });
+
+    return Boolean(response?.ok);
+  } catch (error) {
+    // The content script hasn't been injected into this page yet.
+    return false;
+  }
+}
+
+async function inject_command_bar(tab_id) {
+  try {
+    await chrome.scripting.executeScript({
+      target: {
+        tabId: tab_id
+      },
+      files: ["content-script.js"],
+      injectImmediately: true
+    });
+
+    return true;
+  } catch (error) {
+    // Chrome doesn't allow injection into chrome:// pages, the New Tab page, or the Chrome Web Store.
+    return false;
+  }
+}
+
+// On pages that can't be injected into, show the command bar as the toolbar popup instead.
+async function open_command_bar_popup() {
+  try {
+    await chrome.action.setPopup({
+      popup: "command-bar.html"
+    });
+    await chrome.action.openPopup();
+  } catch (error) {
+    console.error("Arc Command Bar could not open its popup.", error);
+  } finally {
+    await chrome.action.setPopup({
+      popup: ""
+    });
   }
 }
 
 async function handle_message(message, sender) {
   if (message.type === "arc_command_bar_recent_tabs") {
-    const items = await get_recent_tab_items(sender.tab?.id);
+    const current_tab_id = sender.tab?.id ?? await get_active_tab_id();
+    const items = await get_recent_tab_items(current_tab_id);
 
     return {
       ok: true,
@@ -67,8 +142,17 @@ async function handle_message(message, sender) {
     };
   }
 
+  if (message.type === "arc_command_bar_close") {
+    await hide_command_bar(sender.tab?.id);
+
+    return {
+      ok: true
+    };
+  }
+
   if (message.type === "arc_command_bar_activate") {
-    await activate_item(message.item, sender.tab?.id);
+    await hide_command_bar(sender.tab?.id);
+    await activate_item(message.item);
 
     return {
       ok: true
@@ -76,6 +160,31 @@ async function handle_message(message, sender) {
   }
 
   throw new Error("Unknown command bar message.");
+}
+
+async function get_active_tab_id() {
+  const [active_tab] = await chrome.tabs.query({
+    active: true,
+    lastFocusedWindow: true
+  });
+
+  return active_tab?.id;
+}
+
+async function hide_command_bar(tab_id) {
+  if (!tab_id) {
+    return;
+  }
+
+  try {
+    await chrome.tabs.sendMessage(tab_id, {
+      type: "arc_command_bar_hide"
+    }, {
+      frameId: 0
+    });
+  } catch (error) {
+    // The tab navigated or closed, so there is no command bar left to hide.
+  }
 }
 
 async function get_recent_tab_items(current_tab_id) {
@@ -177,7 +286,7 @@ function is_likely_search_phrase(query) {
   return !looks_like_url(query) && /\s/.test(query.trim());
 }
 
-async function activate_item(item, current_tab_id) {
+async function activate_item(item) {
   if (item.kind === "tab") {
     await chrome.tabs.update(item.tab_id, {
       active: true
@@ -351,7 +460,13 @@ function remove_duplicate_items(items) {
     const normalized_item_url = normalize_url(item.url);
     const normalized_item_title = normalize_text(item.title);
 
-    if (seen_urls.has(normalized_item_url) || seen_titles.has(normalized_item_title)) {
+    if (seen_urls.has(normalized_item_url)) {
+      continue;
+    }
+
+    // Different open tabs can share a title (for example, two "Inbox" tabs), so only
+    // non-tab results are dropped for having a title that's already listed.
+    if (item.kind !== "tab" && seen_titles.has(normalized_item_title)) {
       continue;
     }
 
