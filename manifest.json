@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Arc Command Bar",
   "version": "0.1.0",
-  "description": "A Chrome command bar for switching tabs, opening URLs, searching history, and searching sites.",
+  "description": "An Arc-style command bar for switching tabs, opening URLs, searching history, and searching sites.",
   "homepage_url": "https://github.com/kellenmace/arc-command-bar",
   "minimum_chrome_version": "127",
   "permissions": ["activeTab", "favicon", "history", "scripting", "search", "tabs", "topSites"],
